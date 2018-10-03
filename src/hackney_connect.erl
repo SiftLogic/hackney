@@ -12,6 +12,8 @@
          set_sockopts/2,
          ssl_opts/2,
          check_or_close/1,
+         peername/1,
+         sockname/1,
          close/1,
          is_pool/1]).
 
@@ -34,8 +36,13 @@ connect(Transport, Host, Port, Options, Dynamic) ->
     {host, Host},
     {port, Port},
     {dynamic, Dynamic}]),
-  case create_connection(Transport, idna:utf8_to_ascii(Host), Port,
-    Options, Dynamic) of
+
+  Host2 = case Transport of
+            hackney_local_tcp -> Host;
+            _ ->  idna:utf8_to_ascii(Host)
+          end,
+
+  case create_connection(Transport, Host2, Port, Options, Dynamic) of
     {ok, #client{request_ref=Ref}} ->
       {ok, Ref};
     Error ->
@@ -134,6 +141,29 @@ check_or_close(Client) ->
 set_sockopts(#client{transport=Transport, socket=Skt}, Options) ->
   Transport:setopts(Skt, Options).
 
+
+%% @doc get the address and port for the other end of current connection in the client
+peername(#client{transport=Transport, socket=Socket}) ->
+  Transport:peername(Socket);
+peername(Ref) when is_reference(Ref) ->
+  case hackney_manager:get_state(Ref) of
+    req_not_found ->
+      req_not_found;
+    Client ->
+      peername(Client)
+  end.
+
+
+%% @doc the local address and port of current socket in the client
+sockname(#client{transport=Transport, socket=Socket}) ->
+  Transport:sockname(Socket);
+sockname(Ref) when is_reference(Ref) ->
+  case hackney_manager:get_state(Ref) of
+    req_not_found ->
+      req_not_found;
+    Client ->
+      sockname(Client)
+  end.
 
 %% @doc close the client
 %%

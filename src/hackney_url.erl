@@ -26,6 +26,7 @@
 -include("hackney_lib.hrl").
 
 -type qs_vals() :: [{binary(), binary() | true}].
+-type qs_opt() :: noplus | upper.
 
 %% @doc Parse an url and return a #hackney_url record.
 -spec parse_url(URL::binary()|list()) -> hackney_url().
@@ -89,10 +90,14 @@ normalize(#hackney_url{}=Url, Fun) when is_function(Fun, 1) ->
                        {Host0, Netloc0};
                      _ ->
                        Host1 = unicode:characters_to_list(
-                         urldecode(unicode:characters_to_binary(Host0))),
+                                 urldecode(unicode:characters_to_binary(Host0))
+                                ),
 
                        %% encode domain if needed
-                       Host2 = idna:to_ascii(Host1),
+                       Host2 = case Scheme of
+                                 http_unix -> Host1;
+                                 _ -> idna:to_ascii(Host1)
+                               end,
                        Netloc1 = case {Scheme, Port} of
                                    {http, 80} -> list_to_binary(Host2);
                                    {https, 443} -> list_to_binary(Host2);
@@ -288,7 +293,7 @@ urlencode(Bin) ->
 %% characters, `\s', as `+'. The `upper' option overrides the default behaviour
 %% of writing hex numbers using lowecase letters to using uppercase letters
 %% instead.
--spec urlencode(binary() | string(), [noplus|upper]) -> binary().
+-spec urlencode(binary() | string(), [qs_opt()]) -> binary().
 urlencode(Bin, Opts) ->
   Plus = not proplists:get_value(noplus, Opts, false),
   Upper = proplists:get_value(upper, Opts, false),
@@ -328,8 +333,8 @@ tohexl(C) when C < 16 -> $a + C - 10.
 parse_qs(<<>>) ->
   [];
 parse_qs(Bin) ->
-  Tokens = binary:split(Bin, <<"&">>, [trim_all, global]),
-  [case binary:split(Token, <<"=">>, [trim_all]) of
+  Tokens = hackney_bstr:split(Bin, <<"&">>, [trim_all, global]),
+  [case hackney_bstr:split(Token, <<"=">>, [trim_all]) of
      [T] ->
        {urldecode(T), true};
      [Name, Value] ->
@@ -344,7 +349,7 @@ qs(KVs) ->
 
 %% @doc encode query properties to binary
 %% Opts are passed to urlencode.
--spec qs(qs_vals(), [atom]) -> binary().
+-spec qs(qs_vals(), [qs_opt()]) -> binary().
 qs(KVs, Opts) ->
   qs(KVs, Opts, []).
 
