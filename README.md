@@ -2,9 +2,9 @@
 
 # hackney - HTTP client library in Erlang #
 
-Copyright (c) 2012-2018 Benoît Chesneau.
+Copyright (c) 2012-2020 Benoît Chesneau.
 
-__Version:__ 1.14.3
+__Version:__ 1.16.0
 
 # hackney
 
@@ -236,6 +236,7 @@ the request body:
   - `eof`: end the multipart request
   - `{file, Path}`: to stream a file
   - `{file, Path, ExtraHeaders}`: to stream a file
+  - `{file, Path, Name, ExtraHeaders}` : to send a file with DOM element name and extra headers
   - `{Name, Content}`: to send a full part
   - `{Name, Content, ExtraHeaders}`: to send a full part
   - `{mp_mixed, Name, MixedBoundary}`: To notify we start a part with a
@@ -336,9 +337,10 @@ LoopFun(LoopFun, ClientRef).
 
 ### Use the default pool
 
-To reuse a connection globally in your application you can also use a
-socket pool. On startup, hackney launches a pool named default. To use it
-do the following:
+Hackney uses socket pools to reuse connections globally. By default,
+hackney uses a pool named `default`. You may want to use different
+pools in your application which allows you to maintain a group of
+connections. To use a different pool, do the following:
 
 ```erlang
 
@@ -346,16 +348,15 @@ Method = get,
 URL = <<"https://friendpaste.com">>,
 Headers = [],
 Payload = <<>>,
-Options = [{pool, default}],
+Options = [{pool, mypool}],
 {ok, StatusCode, RespHeaders, ClientRef} = hackney:request(Method, URL, Headers,
                                                         Payload, Options).
 ```
 
-By adding the tuple `{pool, default}` to the options, hackney will use
-the connections stored in that pool.
-
-You can also use different pools in your application which allows
-you to maintain a group of connections.
+By adding the tuple `{pool, mypool}` to the options, hackney will use
+the connections stored in that pool. The pool gets started automatically
+the first time it is used. You can also explicitly configure and start
+the pool like this:
 
 ```erlang
 
@@ -378,7 +379,11 @@ hackney_pool:stop_pool(PoolName).
 > Note: Sometimes you want to disable the default pool in your app
 > without having to set the client option each time. You can now do this
 > by setting the hackney application environment key `use_default_pool`
-> to false.
+> to false. This means that hackney will not use socket pools unless
+> specifically requested using the `pool` option as described above.
+>
+> To disable socket pools for a single request, specify the option
+> `{pool, false}`.
 
 ### Use a custom pool handler.
 
@@ -420,6 +425,51 @@ Options = [{follow_redirect, true}, {max_redirect, 5}],
 {ok, S, H, Ref} = hackney:request(Method, URL, ReqHeaders,
                                      ReqBody, Options),
 {ok, Body1} = hackney:body(Ref).
+```
+
+### Use SSL/TLS with self signed certificates
+
+Hackney uses CA bundles adapted from Mozilla by
+[certifi](https://hex.pm/packages/certifi).
+Recognising an organisation specific (self signed) certificates is possible
+by providing the necessary `ssl_options`. Note that `ssl_options` overrides all
+options passed to the ssl module.
+
+ex (>= Erlang 21):
+
+```erlang
+
+CACertFile = <path_to_self_signed_ca_bundle>,
+CrlCheckTimeout = 5000,
+SSLOptions = [
+{verify, verify_peer},
+{versions, ['tlsv1.2']},
+{cacertfile, CACertFile},
+{crl_check, peer},
+{crl_cache, {ssl_crl_cache, {internal, [{http, CrlCheckTimeout}]}}},
+{customize_hostname_check,
+  [{match_fun, public_key:pkix_verify_hostname_match_fun(https)}]}],
+
+Method = get,
+URL = "http://my-organisation/",
+ReqHeaders = [],
+ReqBody = <<>>,
+Options = [{ssl_options, SSLoptions}],
+{ok, S, H, Ref} = hackney:request(Method, URL, ReqHeaders,
+                                  ReqBody, Options),
+
+%% To provide client certificate:
+
+CertFile = <path_to_client_certificate>,
+KeyFile = <path_to_client_private_key>,
+SSLOptions1 = SSLoptions ++ [
+{certfile, CertFile},
+{keyfile, KeyFile}
+],
+Options1 = [{ssl_options, SSLoptions1}],
+{ok, S1, H1, Ref1} = hackney:request(Method, URL, ReqHeaders,
+                                     ReqBody, Options1).
+
 ```
 
 ### Proxy a connection
@@ -483,7 +533,7 @@ been started.
 |hackney.POOLNAME.take_rate    |meter    | meter recording rate at which a connection is retrieved from the pool|
 |hackney.POOLNAME.no_socket    |counter  | Count of new connections                                             |
 |hackney.POOLNAME.in_use_count |histogram| How many connections from the pool are used                          |
-|hackney.POOLNAME.free_count   |counter  | Number of free sockets in the pool                                   |
+|hackney.POOLNAME.free_count   |histogram| Number of free sockets in the pool                                   |
 |hackney.POOLNAME.queue_counter|histogram| queued clients                                                       |
 
 ## Contribute
@@ -520,7 +570,7 @@ Running the tests:
 
 ```
 $ gunicorn --daemon --pid httpbin.pid httpbin:app
-$ make test
+$ rebar3 eunit
 $ kill `cat httpbin.pid`
 ```
 
@@ -533,6 +583,8 @@ $ kill `cat httpbin.pid`
 <tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_app.md" class="module">hackney_app</a></td></tr>
 <tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_bstr.md" class="module">hackney_bstr</a></td></tr>
 <tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_connect.md" class="module">hackney_connect</a></td></tr>
+<tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_connection.md" class="module">hackney_connection</a></td></tr>
+<tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_connections.md" class="module">hackney_connections</a></td></tr>
 <tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_cookie.md" class="module">hackney_cookie</a></td></tr>
 <tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_date.md" class="module">hackney_date</a></td></tr>
 <tr><td><a href="http://github.com/benoitc/hackney/blob/master/doc/hackney_headers.md" class="module">hackney_headers</a></td></tr>
