@@ -1,11 +1,11 @@
-{"1.1.0",
+{"1.2.0",
 [{<<"certifi">>,{pkg,<<"certifi">>,<<"2.5.1">>},0},
  {<<"idna">>,{pkg,<<"idna">>,<<"6.0.0">>},0},
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},0},
  {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.2.0">>},0},
  {<<"parse_trans">>,{pkg,<<"parse_trans">>,<<"3.3.0">>},1},
  {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.5">>},0},
- {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.4.1">>},1}]}.
+ {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.5.0">>},0}]}.
 [
 {pkg_hash,[
  {<<"certifi">>, <<"867CE347F7C7D78563450A18A6A28A8090331E77FA02380B4A21962A65D36EE5">>},
@@ -14,5 +14,13 @@
  {<<"mimerl">>, <<"67E2D3F571088D5CFD3E550C383094B47159F3EEE8FFA08E64106CDF5E981BE3">>},
  {<<"parse_trans">>, <<"09765507A3C7590A784615CFD421D101AEC25098D50B89D7AA1D66646BC571C1">>},
  {<<"ssl_verify_fun">>, <<"6EAF7AD16CB568BB01753DBBD7A95FF8B91C7979482B95F38443FE2C8852A79B">>},
- {<<"unicode_util_compat">>, <<"D869E4C68901DD9531385BB0C8C40444EBF624E60B6962D95952775CAC5E90CD">>}]}
+ {<<"unicode_util_compat">>, <<"8516502659002CEC19E244EBD90D312183064BE95025A319A6C7E89F4BCCD65B">>}]},
+{pkg_hash_ext,[
+ {<<"certifi">>, <<"805ABD97539CAF89EC6D4732C91E62BA9DA0CDA51AC462380BBD28EE697A8C42">>},
+ {<<"idna">>, <<"4BDD305EB64E18B0273864920695CB18D7A2021F31A11B9C5FBCD9A253F936E2">>},
+ {<<"metrics">>, <<"69B09ADDDC4F74A40716AE54D140F93BEB0FB8978D8636EADED0C31B6F099F16">>},
+ {<<"mimerl">>, <<"F278585650AA581986264638EBF698F8BB19DF297F66AD91B18910DFC6E19323">>},
+ {<<"parse_trans">>, <<"17EF63ABDE837AD30680EA7F857DD9E7CED9476CDD7B0394432AF4BFC241B960">>},
+ {<<"ssl_verify_fun">>, <<"13104D7897E38ED7F044C4DE953A6C28597D1C952075EB2E328BC6D6F2BFC496">>},
+ {<<"unicode_util_compat">>, <<"D48D002E15F5CC105A696CF2F1BBB3FC72B4B770A184D8420C8DB20DA2674B38">>}]}
 ].
